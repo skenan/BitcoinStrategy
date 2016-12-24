@@ -20,6 +20,7 @@ lib64/
 parts/
 sdist/
 var/
+.idea/
 *.egg-info/
 .installed.cfg
 *.egg
@@ -87,3 +88,8 @@ ENV/
 
 # Rope project settings
 .ropeproject
+
+.DS_Store
+
+# api key
+api/api_key.py
