@@ -205,3 +205,7 @@ class OKcoinService:
         }
         params['sign'] = buildMySign(params, SECRETKEY)
         return httpPost(URL, BATCH_TRADE_RESOURCE, params)
+
+    @property
+    def name(self):
+        return "Okcoin"

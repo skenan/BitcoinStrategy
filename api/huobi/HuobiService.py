@@ -98,7 +98,6 @@ class HuobiService():
         extra['trade_password'] = None
         extra['trade_id'] = None
         res = send2api(params, extra)
-        print(res)
         if res and "code" not in res:
             return res['id']
         return None
