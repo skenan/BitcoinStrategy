@@ -1,6 +1,9 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
 from api.huobi.HuobiService import HuobiService
 from api.okcoin.OKcoinService import OKcoinService
 from tools import Utils
+from tools.Log import Log
 import time
 
 ORDER_RATIO = 0.8
@@ -9,12 +12,12 @@ MAX_WAITING_TIME = 2
 
 
 history_price = []
-
+log = Log()
 
 def buy(service, quantity, price, support_cancel):
     order_id = service.buy(price, quantity)
     if not order_id:
-        print("%s 买下单失败" % service.name)
+        log.info("%s 买下单失败" % service.name)
         return None
 
     order_info = service.getOrderInfo(order_id)
@@ -30,13 +33,13 @@ def buy(service, quantity, price, support_cancel):
         order_info = service.getOrderInfo(order_id)
 
     executed_qty = order_info.deal_amount
-    print("%s 买入 %.3f 比特币, 花费 %.2f" % (service.name, order_info.deal_amount, order_info.avg_price * order_info.deal_amount))
+    log.info("%s 买入 %.3f 比特币, 花费 %.2f" % (service.name, order_info.deal_amount, order_info.avg_price * order_info.deal_amount))
     return executed_qty if executed_qty > 0 else None
 
 def sell(service, quantity, price, support_cancel):
     order_id = service.sell(price, quantity)
     if not order_id:
-        print("%s 卖单下单失败" % service.name)
+        log.info("%s 卖单下单失败" % service.name)
         return None
 
     order_info = service.getOrderInfo(order_id)
@@ -52,7 +55,7 @@ def sell(service, quantity, price, support_cancel):
         order_info = service.getOrderInfo(order_id)
 
     executed_qty = order_info.deal_amount
-    print("%s 卖出 %.3f 比特币, 收到 %.2f" % (service.name, order_info.deal_amount, order_info.avg_price * order_info.deal_amount))
+    log.info("%s 卖出 %.3f 比特币, 收到 %.2f" % (service.name, order_info.deal_amount, order_info.avg_price * order_info.deal_amount))
     return executed_qty if executed_qty > 0 else None
 
 
@@ -71,13 +74,14 @@ def calculate_price_trend():
 
 if __name__ == '__main__':
 
+
     huobi_service = HuobiService("BTC")
     okcoin_service = OKcoinService("BTC")
     last_huobi_depth = huobi_service.getDepth(3)
     last_okcoin_depth = okcoin_service.getDepth(3)
 
     while True:
-        print(time.strftime("%Y-%m-%d %H:%M:%S") + " 正在分析..")
+        log.debug("正在分析..")
         #先获取账户信息，耗时长
         huobi_account = huobi_service.getAccountInfo()
         okcoin_account = okcoin_service.getAccountInfo()
@@ -89,7 +93,7 @@ if __name__ == '__main__':
             Qty = min(huobi_account.btc_balance, okcoin_account.cny_balance / okcoin_depth.sell_price)
             Qty = calculate_tradatable_amount(Qty, huobi_depth.buy_amount, okcoin_depth.sell_amount)
             if Qty:
-                print("获利信号：OKcoin买入 %.2f, Huobi卖出 %.2f, 数量 %.3f" % (okcoin_depth.sell_price, huobi_depth.buy_price, Qty))
+                log.info("获利信号：OKcoin买入 %.2f, Huobi卖出 %.2f, 数量 %.3f" % (okcoin_depth.sell_price, huobi_depth.buy_price, Qty))
                 if not calculate_price_trend():
                     # 先huobi卖， 再okcoin买
                     exec_amount = sell(huobi_service, Qty, huobi_depth.buy_price, True)
@@ -105,7 +109,7 @@ if __name__ == '__main__':
             Qty = min(okcoin_account.btc_balance, huobi_account.cny_balance / huobi_depth.sell_price)
             Qty = calculate_tradatable_amount(Qty, okcoin_depth.buy_amount, huobi_depth.sell_amount)
             if Qty:
-                print("获利信号：Huobi买入 %.2f, Okcoin卖出 %.2f, 数量 %.3f" % (huobi_depth.sell_price, okcoin_depth.buy_price, Qty))
+                log.info("获利信号：Huobi买入 %.2f, Okcoin卖出 %.2f, 数量 %.3f" % (huobi_depth.sell_price, okcoin_depth.buy_price, Qty))
                 if calculate_price_trend():
                     #先huobi买，再okcoin卖
                     exec_amount = buy(huobi_service, Qty, huobi_depth.sell_price, True)
