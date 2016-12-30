@@ -9,8 +9,9 @@ import numpy as np
 
 ORDER_RATIO = 0.8
 MAX_WAITING_TIME = 3
-MAX_HISTROY_SIZE = 8
+MAX_HISTORY_SIZE = 5
 MAX_PRICE_DIFF = 12
+MAX_STD_DEV = 1.5
 log = Log()
 
 
@@ -65,14 +66,14 @@ def sell(service, quantity, price, support_cancel):
 
 
 def calculate_tradatable_amount(avaliable_amount, buy_amount, sell_amount):
-    Qty = Utils.downRound(min(avaliable_amount, min(buy_amount, sell_amount) * ORDER_RATIO, 0.02), 3)
+    Qty = Utils.downRound(min(avaliable_amount, min(buy_amount, sell_amount) * ORDER_RATIO, 0.05), 3)
     return Qty if Qty > 0.01 else 0
 
 
 def calculate_price_trend(data):
     # 需要根据最近1分钟的价格变化进行计算
     # False指价格下跌趋势, True指价格上升趋势
-    x = np.arange(0, MAX_HISTROY_SIZE)
+    x = np.arange(0, MAX_HISTORY_SIZE)
     y = np.array(data)
     z = np.polyfit(x, y, 1)
     return z[0] > 0
@@ -82,7 +83,7 @@ def go():
     huobi_service = HuobiService("BTC")
     okcoin_service = OKcoinService("BTC")
     history_prices = []
-    while len(history_prices) < MAX_HISTROY_SIZE:
+    while len(history_prices) < MAX_HISTORY_SIZE:
         okcoin_depth = okcoin_service.getDepth(3)
         history_prices.append(okcoin_depth.sell_price)
 
@@ -99,8 +100,11 @@ def go():
         huobi_depth = huobi_service.getDepth(3)
         okcoin_depth = okcoin_service.getDepth(3)
         history_prices.append(okcoin_depth.sell_price)
-        history_prices = history_prices[-MAX_HISTROY_SIZE:]
-
+        history_prices = history_prices[-MAX_HISTORY_SIZE:]
+        std_dev = np.std(history_prices)
+        if std_dev > MAX_STD_DEV:
+            log.info("波动性过大 %.4f,等待" % std_dev)
+            continue
         sprend1 = huobi_depth.buy_price - okcoin_depth.sell_price
         sprend2 = okcoin_depth.buy_price - huobi_depth.sell_price
 
