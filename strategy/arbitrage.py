@@ -118,12 +118,12 @@ def go():
                     # 先huobi卖， 再okcoin买
                     exec_amount = sell(huobi_service, Qty, huobi_depth.buy_price, True)
                     if exec_amount:
-                        real_amount = buy(okcoin_service, Qty, okcoin_depth.sell_price, False)
+                        real_amount = buy(okcoin_service, exec_amount, okcoin_depth.sell_price, False)
                 else:
                     # 先Okcoin买， 再Huobi卖
                     exec_amount = buy(okcoin_service, Qty, okcoin_depth.sell_price, True)
                     if exec_amount:
-                        real_amount = sell(huobi_service, Qty, huobi_depth.buy_price, False)
+                        real_amount = sell(huobi_service, exec_amount, huobi_depth.buy_price, False)
 
         elif 0 <= sprend2 <= MAX_PRICE_DIFF:  # 获利信号：OKcoin卖，huobi买
             Qty = min(okcoin_account.btc_balance, huobi_account.cny_balance / huobi_depth.sell_price)
@@ -135,12 +135,12 @@ def go():
                     # 先huobi买，再okcoin卖
                     exec_amount = buy(huobi_service, Qty, huobi_depth.sell_price, True)
                     if exec_amount:
-                        real_amount = sell(okcoin_service, Qty, okcoin_depth.buy_price, False)
+                        real_amount = sell(okcoin_service, exec_amount, okcoin_depth.buy_price, False)
                 else:
                     # 先okcoin卖，再huobi买
                     exec_amount = sell(okcoin_service, Qty, okcoin_depth.buy_price, True)
                     if exec_amount:
-                        real_amount = buy(huobi_service, Qty, huobi_depth.sell_price, False)
+                        real_amount = buy(huobi_service, exec_amount, huobi_depth.sell_price, False)
         # last_huobi_depth = huobi_depth
         # last_okcoin_depth = okcoin_depth
         time.sleep(1)
