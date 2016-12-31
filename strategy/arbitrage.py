@@ -9,8 +9,9 @@ import numpy as np
 
 ORDER_RATIO = 0.8
 MAX_WAITING_TIME = 3
-MAX_HISTORY_SIZE = 5
+MAX_HISTORY_SIZE = 30
 MAX_PRICE_DIFF = 12
+MAX_STD_SIZE = 5
 MAX_STD_DEV = 1.5
 log = Log()
 
@@ -102,9 +103,11 @@ def go():
         history_prices.append(okcoin_depth.sell_price)
         history_prices = history_prices[-MAX_HISTORY_SIZE:]
 
-        std_dev = np.std(history_prices)
+        std_dev = np.std(history_prices[-MAX_STD_SIZE:])
         if std_dev > MAX_STD_DEV:
             log.warning("波动性过大 %.4f,等待" % std_dev)
+            log.debug(history_prices[-MAX_STD_SIZE:])
+            log.debug(calculate_price_trend(history_prices))
             time.sleep(1)
             continue
         sprend1 = huobi_depth.buy_price - okcoin_depth.sell_price
