@@ -73,7 +73,7 @@ def calculate_tradatable_amount(avaliable_amount, buy_amount, sell_amount):
 def calculate_price_trend(data):
     # 需要根据最近1分钟的价格变化进行计算
     # False指价格下跌趋势, True指价格上升趋势
-    x = np.arange(0, MAX_HISTORY_SIZE)
+    x = np.arange(0, len(data))
     y = np.array(data)
     z = np.polyfit(x, y, 1)
     return z[0] > 0
@@ -101,9 +101,11 @@ def go():
         okcoin_depth = okcoin_service.getDepth(3)
         history_prices.append(okcoin_depth.sell_price)
         history_prices = history_prices[-MAX_HISTORY_SIZE:]
+
         std_dev = np.std(history_prices)
         if std_dev > MAX_STD_DEV:
-            log.info("波动性过大 %.4f,等待" % std_dev)
+            log.warning("波动性过大 %.4f,等待" % std_dev)
+            time.sleep(1)
             continue
         sprend1 = huobi_depth.buy_price - okcoin_depth.sell_price
         sprend2 = okcoin_depth.buy_price - huobi_depth.sell_price
